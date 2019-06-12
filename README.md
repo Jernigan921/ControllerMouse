@@ -1,4 +1,4 @@
-# ControllerMouse
+# Controller as a Mouse
 This lets you control the mouse with an xbox controller. It's great for when you want to sit back and scroll through Youtube,
 Netflix, Hulu, Reddit, or anyother site on your computer with an xbox controller. 
 
