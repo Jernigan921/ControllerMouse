@@ -1,27 +1,31 @@
 // Author: Tim Jernigan
 // Created On: 12.26.2018 
-// Updated Last: 1.12.2019 
+// Updated Last: 6.12.2019
 // Description : This is my function file.
 
 #include "stdafx.h"
 #include "XboxControl.h"
 #include <shellapi.h>
 
+int suckIt = 1;
+
+/* Sets the controller number */
 XboxControl::XboxControl(int playerNumber) {
-	// sets the controller number //
 	controllerNum = playerNumber - 1;
 }
 
+/* Gets the state of the controller */ 
 XINPUT_STATE XboxControl::GetState() {
-	// zeroise state //
+	// zeroise state
 	ZeroMemory(&controllerState, sizeof(XINPUT_STATE));
 
-	// get state //
+	// get state
 	XInputGetState(controllerNum, &controllerState);
 
 	return controllerState;
 }
 
+/* Checks to see if controller is connect to the system */
 bool XboxControl::IsConnected() {
 	// zeroise state //
 	ZeroMemory(&controllerState, sizeof(XINPUT_STATE));
@@ -39,21 +43,24 @@ bool XboxControl::IsConnected() {
 	}
 }
 
+/* Sends a right click input to the system */
 void XboxControl::mouseRightClick() {
 	INPUT action;
-
+	
 	action.type = INPUT_MOUSE;
 	action.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
 	SendInput(1, &action, sizeof(INPUT));
-
+	
 	Sleep(10);
-
+		
 	ZeroMemory(&action, sizeof(INPUT));
 	action.type = INPUT_MOUSE;
 	action.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
 	::SendInput(1, &action, sizeof(INPUT));
+
 }
 
+/* Sends a left click input to the system */
 void XboxControl::mouseLeftClick() {
 	/*
 	INPUT in;
@@ -73,6 +80,7 @@ void XboxControl::mouseLeftClick() {
 	SendInput(1, &action, sizeof(INPUT));
 }
 
+/* Sends a left click relased to the system */
 void XboxControl::mouseLeftClickReleased() {
 	INPUT action;
 
@@ -82,22 +90,20 @@ void XboxControl::mouseLeftClickReleased() {
 	SendInput(1, &action, sizeof(INPUT));
 }
 
-
+/* Sends mouse coordinates to the system -Tim */
 void XboxControl::mouseMode(POINT mouse) {
-	// Deals with dead zones //
+	// deals with deadzones for the left thumb stick
 	float LX = GetState().Gamepad.sThumbLX;
 	float LY = GetState().Gamepad.sThumbLY;
 
-	// direction the controller is pushed //
+	// direction the controller is pushed 
 	float magnitude = sqrt(LX * LX + LY * LY);
 	int normalizedLX = LX / magnitude;
 	int normalizedLY = LY / magnitude;
 	float normalizedMagnitude = 0;
 
-	if (magnitude > XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) 
-	{
-		if (magnitude > 32767) 
-		{
+	if (magnitude > XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) {
+		if (magnitude > 32767) {
 			magnitude = 32767;
 		}
 		// adjust //
@@ -107,8 +113,7 @@ void XboxControl::mouseMode(POINT mouse) {
 		normalizedLX = LX / magnitude;
 		normalizedLY = LY / magnitude;
 	}
-	else
-	{
+	else {
 		magnitude = 0.0;
 		normalizedMagnitude = 0.0;
 		normalizedLX = 0.0;
@@ -117,21 +122,18 @@ void XboxControl::mouseMode(POINT mouse) {
 		LY = 0.0;
 	}
 
-	// Same for the right joystick //
-	// Deals with dead zones //
+	// deals with deadzone for the right thumb stick
 	float RX = GetState().Gamepad.sThumbRX;
 	float RY = GetState().Gamepad.sThumbRY;
 
-	// direction the controller is pushed //
+	// direction the controller is pushed
 	float rightMagnitude = sqrt(RX * RX + RY * RY);
 	int normalizedRX = RX / rightMagnitude;
 	int normalizedRY = RY / rightMagnitude;
 	float normalizedRightMagnitude = 0;
 
-	if (rightMagnitude > XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)
-	{
-		if (rightMagnitude > 32767)
-		{
+	if (rightMagnitude > XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE) {
+		if (rightMagnitude > 32767) {
 			rightMagnitude = 32767;
 		}
 		// adjust //
@@ -141,8 +143,7 @@ void XboxControl::mouseMode(POINT mouse) {
 		normalizedRX = RX / rightMagnitude;
 		normalizedRY = RY / rightMagnitude;
 	}
-	else
-	{
+	else {
 		rightMagnitude = 0.0;
 		normalizedRightMagnitude = 0.0;
 		normalizedRX = 0.0;
@@ -151,61 +152,54 @@ void XboxControl::mouseMode(POINT mouse) {
 		RY = 0.0;
 	}
 
-	if (normalizedMagnitude == 1) 
-	{
-		// up //
-		if (normalizedLY == 1 && normalizedLX == 0) 
-		{
+/* Increment the mouse position based on thumbstick movement. - Tim */
+	if (normalizedMagnitude == 1) {
+		// up 
+		if (normalizedLY == 1 && normalizedLX == 0) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x, mouse.y - 1);
 		}
 		// up right //
-		if (normalizedLY == 1 && normalizedLX == 1)
-		{
+		if (normalizedLY == 1 && normalizedLX == 1) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x + 1, mouse.y - 1);
 		}
 		// up left //
-		if (normalizedLY == 1 && normalizedLX == -1)
-		{
+		if (normalizedLY == 1 && normalizedLX == -1) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x - 1, mouse.y - 1);
 		}
 
 		// down //
-		if (normalizedLY == -1 && normalizedLX == 0)
-		{
+		if (normalizedLY == -1 && normalizedLX == 0) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x, mouse.y + 1);
 		}
 		// down right //
-		if (normalizedLY == -1 && normalizedLX == 1)
-		{
+		if (normalizedLY == -1 && normalizedLX == 1) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x + 1 , mouse.y + 1);
 		}
 		// down left //
-		if (normalizedLY == -1 && normalizedLX == -1)
-		{
+		if (normalizedLY == -1 && normalizedLX == -1) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x - 1, mouse.y + 1);
 		}
 		// right //
-		if (normalizedLY == 0 && normalizedLX == 1)
-		{
+		if (normalizedLY == 0 && normalizedLX == 1) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x + 1, mouse.y);
 		}
 		// left //
-		if (normalizedLY == 0 && normalizedLX == -1)
-		{
+		if (normalizedLY == 0 && normalizedLX == -1) {
 			GetCursorPos(&mouse);
 			SetCursorPos(mouse.x - 1, mouse.y);
 		}
 		 
 	}
 	
-	// moves the scroll wheel up //
+/* Scroll Wheel Movement */
+	// up
 	if (normalizedRY == 1 && normalizedRX == 0)
 	{
 		if (normalizedRightMagnitude != 1) 
@@ -223,11 +217,9 @@ void XboxControl::mouseMode(POINT mouse) {
 		SendInput(1, &in, sizeof(in));
 	}
 
-	// moves the scroll wheel down //
-	if (normalizedRY == -1 && normalizedRX == 0)
-	{
-		if (normalizedRightMagnitude != 1) 
-		{
+	// down
+	if (normalizedRY == -1 && normalizedRX == 0) {
+		if (normalizedRightMagnitude != 1) {
 			Sleep(150);
 		}
 		INPUT in;
@@ -241,31 +233,25 @@ void XboxControl::mouseMode(POINT mouse) {
 		SendInput(1, &in, sizeof(in));
 	}
 
-	// mouse left click //
-	if (GetState().Gamepad.wButtons & XINPUT_GAMEPAD_A)
-	{
-		mouseLeftClick();
-		Sleep(100);
-		mouseLeftClickReleased();
+	// left click 
+	if (GetState().Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+		std::cout << GetState().Gamepad.wButtons << std::endl;
+		suckIt++;
+		if (suckIt % 2 == 0) {
+			mouseLeftClick();
+		}
+		else {
+			mouseLeftClickReleased();
+		}
+		Sleep(200);
 	}
 
-	// mouse right click //
-	if (GetState().Gamepad.wButtons & XINPUT_GAMEPAD_B)
-	{
+	// right click
+	if (GetState().Gamepad.wButtons & XINPUT_GAMEPAD_B) {
 		Sleep(100);
 		mouseRightClick();
 	}
 
 	Sleep(1);
 }
- 
-// Currently this is the keyboard test. It is still being worked on by the joystick axis is off.
-// Comming in a later update. - Tim Jernigan
-/*
-void XboxControl::keyboardMode()
-{
-ShellExecuteA(NULL, "open", "C:\Windows\system32\osk.exe", NULL, NULL, SW_SHOWNORMAL);
-}
-*/
-
 
